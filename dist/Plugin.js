@@ -32,7 +32,16 @@ class persistentQueue extends erela_js_1.Plugin {
                         collection.updateOne({
                             id: player.guild
                         }, {
-                            player
+                            $set: {
+                                queue: player.queue,
+                                current: player.queue.current,
+                                queueRepeat: player.queueRepeat,
+                                trackRepeat: player.trackRepeat,
+                                textChannel: player.textChannel,
+                                voiceChannel: player.voiceChannel,
+                                voiceState: player.voiceState,
+                                volume: player.volume
+                            }
                         }, {
                             upsert: true
                         });
