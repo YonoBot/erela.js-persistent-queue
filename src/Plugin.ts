@@ -1,8 +1,8 @@
-import { Manager, Player, Plugin, TrackUtils } from "erela.js";
+import { Manager, Plugin, TrackUtils } from "erela.js";
 import { PluginOptions } from "./typings";
-import { Collection, Db, MongoClient } from 'mongodb';
-import { Client } from "discord.js";
-
+import { Db, MongoClient } from 'mongodb';
+import { Client, User } from "discord.js";
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 const check = (options: PluginOptions) => {
     if (!options) {
         throw new TypeError("PluginOptions must not be empty.");
@@ -63,6 +63,7 @@ export class persistentQueue extends Plugin {
             }
         })
         this.client.once('ready', async (client) => {
+            await delay(this.options.delay! <= 2000 ? 2000 : this.options.delay!)
             const database = await this.Db.collection('persistentQueue').find({}).toArray() as any[];
             for (let db of database) {
                 const player = this.manager.create({
@@ -71,9 +72,10 @@ export class persistentQueue extends Plugin {
                     guild: db.guild
                 })
                 player.connect();
-                if (db.current) player.queue.add(db.current);
+                //@ts-ignore
+                if (db.current) player.queue.add(TrackUtils.buildUnresolved({ title: db.current.title, author: db.current.author, duration: db.current.duration }), new User(client, db.current.requester));
                 for (let track of db.queue) {
-                    player.queue.add(TrackUtils.isTrack(track) ? track : TrackUtils.buildUnresolved(track))
+                    player.queue.add(TrackUtils.buildUnresolved({ title: track.title, author: track.author, duration: track.duration }, new User(client, db.current.requester)))
                 }
                 player.play();
             }
