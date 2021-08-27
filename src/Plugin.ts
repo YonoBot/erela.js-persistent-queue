@@ -81,8 +81,8 @@ export class persistentQueue extends Plugin {
                 for (let track of db.queue) {
                     player.queue.add(TrackUtils.buildUnresolved({ title: track.title, author: track.author, duration: track.duration }, new User(client, db.current.requester)))
                 }
-                player.setTrackRepeat(db.trackRepeat ?? false);
-                player.setQueueRepeat(db.queueRepeat ?? false)
+                if (db.trackRepeat) player.setTrackRepeat(true);
+                if (db.queueRepeat) player.setQueueRepeat(true);
                 player.play(TrackUtils.buildUnresolved(player.queue.current!, new User(client, db.current.requester)), { startTime: db.position ?? 0 });
             }
         })
