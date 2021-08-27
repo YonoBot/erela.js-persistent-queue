@@ -2,7 +2,6 @@ import { Manager, Plugin, TrackUtils } from "erela.js";
 import { PluginOptions } from "./typings";
 import { Db, MongoClient } from 'mongodb';
 import { Client, User } from "discord.js";
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 const check = (options: PluginOptions) => {
     if (!options) {
         throw new TypeError("PluginOptions must not be empty.");
@@ -63,24 +62,31 @@ export class persistentQueue extends Plugin {
             }
         })
         this.client.once('ready', async (client) => {
-            await delay(this.options.delay! <= 2000 ? 2000 : this.options.delay!)
+            await this.delay(this.options.delay! <= 2000 ? 2000 : this.options.delay!);
+            
             const database = await this.Db.collection('persistentQueue').find({}).toArray() as any[];
             for (let db of database) {
-                if (!db.voiceChannel || db.textChannel || db.id) return;
+                if (!db.voiceChannel || !db.textChannel || !db.id) return;
                 const player = this.manager.create({
                     voiceChannel: db.voiceChannel,
                     textChannel: db.textChannel,
                     guild: db.id
                 })
                 player.connect();
-                //@ts-ignore
-                if (db.current) player.queue.add(TrackUtils.buildUnresolved({ title: db.current.title, author: db.current.author, duration: db.current.duration }), new User(client, db.current.requester));
+                if (db.current) player.queue.add(TrackUtils.buildUnresolved({ title: db.current.title, author: db.current.author, duration: db.current.duration }, new User(client, db.current.requester)));
                 for (let track of db.queue) {
                     player.queue.add(TrackUtils.buildUnresolved({ title: track.title, author: track.author, duration: track.duration }, new User(client, db.current.requester)))
                 }
                 player.play();
             }
         })
+    }
+    public delay(delayInms: number) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve(2);
+            }, delayInms);
+        });
     }
 
     public async connectDB() {

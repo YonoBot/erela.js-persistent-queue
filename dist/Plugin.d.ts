@@ -9,6 +9,7 @@ export declare class persistentQueue extends Plugin {
     manager: Manager;
     constructor(client: Client, options: PluginOptions);
     load(manager: Manager): void;
+    delay(delayInms: number): Promise<unknown>;
     connectDB(): Promise<void>;
 }
 //# sourceMappingURL=Plugin.d.ts.map
