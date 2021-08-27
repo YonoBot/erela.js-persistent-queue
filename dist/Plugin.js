@@ -58,10 +58,12 @@ class persistentQueue extends erela_js_1.Plugin {
             await delay(this.options.delay <= 2000 ? 2000 : this.options.delay);
             const database = await this.Db.collection('persistentQueue').find({}).toArray();
             for (let db of database) {
+                if (!db.voiceChannel || db.textChannel || db.id)
+                    return;
                 const player = this.manager.create({
                     voiceChannel: db.voiceChannel,
                     textChannel: db.textChannel,
-                    guild: db.guild
+                    guild: db.id
                 });
                 player.connect();
                 //@ts-ignore

@@ -66,10 +66,11 @@ export class persistentQueue extends Plugin {
             await delay(this.options.delay! <= 2000 ? 2000 : this.options.delay!)
             const database = await this.Db.collection('persistentQueue').find({}).toArray() as any[];
             for (let db of database) {
+                if (!db.voiceChannel || db.textChannel || db.id) return;
                 const player = this.manager.create({
                     voiceChannel: db.voiceChannel,
                     textChannel: db.textChannel,
-                    guild: db.guild
+                    guild: db.id
                 })
                 player.connect();
                 //@ts-ignore
