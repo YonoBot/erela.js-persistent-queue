@@ -51,7 +51,7 @@ export class persistentQueue extends Plugin {
                                 voiceChannel: player.voiceChannel,
                                 voiceState: player.voiceState,
                                 volume: player.volume,
-                                position: payload.state.position
+                                position: payload.state.position || 0
                             }
                         }, {
                             upsert: true
@@ -70,7 +70,7 @@ export class persistentQueue extends Plugin {
             
             const database = await this.Db.collection('persistentQueue').find({}).toArray() as any[];
             for (let db of database) {
-                if (!db.voiceChannel || !db.textChannel || !db.id || !db.current || !db.queue.length) return;
+                if (!db.voiceChannel || !db.textChannel || !db.id || !db.current) return;
                 const player = this.manager.create({
                     voiceChannel: db.voiceChannel,
                     textChannel: db.textChannel,

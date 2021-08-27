@@ -43,7 +43,7 @@ class persistentQueue extends erela_js_1.Plugin {
                                 voiceChannel: player.voiceChannel,
                                 voiceState: player.voiceState,
                                 volume: player.volume,
-                                position: payload.state.position
+                                position: payload.state.position || 0
                             }
                         }, {
                             upsert: true
@@ -61,7 +61,7 @@ class persistentQueue extends erela_js_1.Plugin {
             await this.delay(this.options.delay ?? 2000);
             const database = await this.Db.collection('persistentQueue').find({}).toArray();
             for (let db of database) {
-                if (!db.voiceChannel || !db.textChannel || !db.id || !db.current || !db.queue.length)
+                if (!db.voiceChannel || !db.textChannel || !db.id || !db.current)
                     return;
                 const player = this.manager.create({
                     voiceChannel: db.voiceChannel,
