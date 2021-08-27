@@ -42,7 +42,8 @@ class persistentQueue extends erela_js_1.Plugin {
                                 textChannel: player.textChannel,
                                 voiceChannel: player.voiceChannel,
                                 voiceState: player.voiceState,
-                                volume: player.volume
+                                volume: player.volume,
+                                position: player.position
                             }
                         }, {
                             upsert: true
@@ -54,7 +55,7 @@ class persistentQueue extends erela_js_1.Plugin {
             }
         });
         this.client.once('ready', async (client) => {
-            await this.delay(this.options.delay <= 2000 ? 2000 : this.options.delay);
+            await this.delay(this.options.delay ?? 2000);
             const database = await this.Db.collection('persistentQueue').find({}).toArray();
             for (let db of database) {
                 if (!db.voiceChannel || !db.textChannel || !db.id)
@@ -70,7 +71,7 @@ class persistentQueue extends erela_js_1.Plugin {
                 for (let track of db.queue) {
                     player.queue.add(erela_js_1.TrackUtils.buildUnresolved({ title: track.title, author: track.author, duration: track.duration }, new discord_js_1.User(client, db.current.requester)));
                 }
-                player.play();
+                player.play({ startTime: db.position ?? 0 });
             }
         });
     }
