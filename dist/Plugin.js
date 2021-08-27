@@ -12,12 +12,13 @@ const check = (options) => {
     }
 };
 class persistentQueue extends erela_js_1.Plugin {
-    constructor(options) {
+    constructor(client, options) {
         super();
         check(options);
         this.options = {
             ...options,
         };
+        this.client = client;
         this.connectDB();
     }
     load(manager) {
@@ -49,6 +50,23 @@ class persistentQueue extends erela_js_1.Plugin {
                     break;
                 default:
                     break;
+            }
+        });
+        this.client.once('ready', async (client) => {
+            const database = await this.Db.collection('persistentQueue').find({}).toArray();
+            for (let db of database) {
+                const player = this.manager.create({
+                    voiceChannel: db.voiceChannel,
+                    textChannel: db.textChannel,
+                    guild: db.guild
+                });
+                player.connect();
+                if (db.current)
+                    player.queue.add(db.current);
+                for (let track of db.queue) {
+                    player.queue.add(erela_js_1.TrackUtils.isTrack(track) ? track : erela_js_1.TrackUtils.buildUnresolved(track));
+                }
+                player.play();
             }
         });
     }
