@@ -71,7 +71,7 @@ class persistentQueue extends erela_js_1.Plugin {
                 for (let track of db.queue) {
                     player.queue.add(erela_js_1.TrackUtils.buildUnresolved({ title: track.title, author: track.author, duration: track.duration }, new discord_js_1.User(client, db.current.requester)));
                 }
-                player.play({ startTime: db.position ?? 0 });
+                player.play(erela_js_1.TrackUtils.buildUnresolved(player.queue.current, new discord_js_1.User(client, db.current.requester)), { startTime: db.position ?? 0 });
             }
         });
     }
