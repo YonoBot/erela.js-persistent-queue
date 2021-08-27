@@ -51,7 +51,7 @@ export class persistentQueue extends Plugin {
                                 voiceChannel: player.voiceChannel,
                                 voiceState: player.voiceState,
                                 volume: player.volume,
-                                position: player.position
+                                position: payload.state.position
                             }
                         }, {
                             upsert: true
@@ -61,13 +61,16 @@ export class persistentQueue extends Plugin {
                 default:
                     break;
             }
+        }).on('playerDestroy', (player) => {
+            const collection = this.Db.collection('persistentQueue');
+            collection.deleteOne({ id: player.guild })
         })
         this.client.once('ready', async (client) => {
             await this.delay(this.options.delay ?? 2000);
             
             const database = await this.Db.collection('persistentQueue').find({}).toArray() as any[];
             for (let db of database) {
-                if (!db.voiceChannel || !db.textChannel || !db.id) return;
+                if (!db.voiceChannel || !db.textChannel || !db.id || !db.current || !db.queue.length) return;
                 const player = this.manager.create({
                     voiceChannel: db.voiceChannel,
                     textChannel: db.textChannel,
