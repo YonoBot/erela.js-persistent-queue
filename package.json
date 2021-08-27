@@ -2,9 +2,11 @@
   "name": "erela.js-persistent-queue",
   "version": "0.0.1",
   "dependencies": {
+    "discord.js": "latest",
     "erela.js": "^2.3.3",
     "mongodb": "^4.1.1"
   },
+  "main": "dist",
   "devDependencies": {
     "@types/node": "^16.7.2",
     "rimraf": "^3.0.2",

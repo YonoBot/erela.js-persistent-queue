@@ -1,6 +1,7 @@
-import { Manager, Plugin } from "erela.js";
+import { Manager, Player, Plugin, TrackUtils } from "erela.js";
 import { PluginOptions } from "./typings";
-import { Db, MongoClient } from 'mongodb';
+import { Collection, Db, MongoClient } from 'mongodb';
+import { Client } from "discord.js";
 
 const check = (options: PluginOptions) => {
     if (!options) {
@@ -18,13 +19,15 @@ export class persistentQueue extends Plugin {
     private readonly options: PluginOptions;
     private Db!: Db;
     private clientDb!: MongoClient;
+    private client!: Client;
     public manager!: Manager;
-    constructor(options: PluginOptions) {
+    constructor(client: Client, options: PluginOptions) {
         super()
         check(options);
         this.options = {
             ...options,
         };
+        this.client = client;
         this.connectDB()
     }
 
@@ -57,6 +60,22 @@ export class persistentQueue extends Plugin {
                     break;
                 default:
                     break;
+            }
+        })
+        this.client.once('ready', async (client) => {
+            const database = await this.Db.collection('persistentQueue').find({}).toArray() as any[];
+            for (let db of database) {
+                const player = this.manager.create({
+                    voiceChannel: db.voiceChannel,
+                    textChannel: db.textChannel,
+                    guild: db.guild
+                })
+                player.connect();
+                if (db.current) player.queue.add(db.current);
+                for (let track of db.queue) {
+                    player.queue.add(TrackUtils.isTrack(track) ? track : TrackUtils.buildUnresolved(track))
+                }
+                player.play();
             }
         })
     }
