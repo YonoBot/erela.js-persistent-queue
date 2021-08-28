@@ -33,44 +33,54 @@ export class persistentQueue extends Plugin {
     public load(manager: Manager) {
         this.manager = manager
         this.manager.on('nodeRaw', (payload: any) => {
-            switch (payload.op) {
-                case "playerUpdate":
-                    delete payload.op;
-                    const player = this.manager.players.get(payload.guildId);
-                    if (player) {
-                        const collection = this.Db.collection('persistentQueue');
-                        collection.updateOne({
-                            id: player.guild
-                        }, {
-                            $set: {
-                                queue: player.queue,
-                                current: player.queue.current,
-                                queueRepeat: player.queueRepeat,
-                                trackRepeat: player.trackRepeat,
-                                textChannel: player.textChannel,
-                                voiceChannel: player.voiceChannel,
-                                voiceState: player.voiceState,
-                                volume: player.volume,
-                                position: payload.state.position || 0
-                            }
-                        }, {
-                            upsert: true
-                        })
-                    }
-                    break;
-                default:
-                    break;
+            if (payload.op === "playerUpdate") {
+                delete payload.op;
+                const player = this.manager.players.get(payload.guildId);
+                if (player) {
+                    const collection = this.Db.collection('persistentQueue');
+                    collection.updateOne({
+                        id: player.guild
+                    }, {
+                        $set: {
+                            queue: player.queue,
+                            current: player.queue.current,
+                            queueRepeat: player.queueRepeat,
+                            trackRepeat: player.trackRepeat,
+                            textChannel: player.textChannel,
+                            voiceChannel: player.voiceChannel,
+                            voiceState: player.voiceState,
+                            volume: player.volume,
+                            position: payload.state.position || 0
+                        }
+                    }, {
+                        upsert: true
+                    })
+                    player.position = payload.state.position || 0
+                }
             }
         }).on('playerDestroy', (player) => {
             const collection = this.Db.collection('persistentQueue');
             collection.deleteOne({ id: player.guild })
+        }).on('queueEnd', (player) => {
+            const collection = this.Db.collection('persistentQueue');
+            collection.updateOne({
+                id: player.guild
+            }, {
+                $set: {
+                    queue: player.queue,
+                    current: player.queue.current,
+                    position: 0
+                }
+            }, {
+                upsert: true
+            })
         })
         this.client.once('ready', async (client) => {
             await this.delay(this.options.delay ?? 2000);
             
             const database = await this.Db.collection('persistentQueue').find({}).toArray() as any[];
-            for (let db of database) {
-                if (!db.voiceChannel || !db.textChannel || !db.id || !db.current) return;
+            database.forEach(db => {
+                if (!db.voiceChannel || !db.textChannel || !db.id || !db.current || !client.channels.cache.get(db.voiceChannel) || !client.channels.cache.get(db.textChannel)) return;
                 const player = this.manager.create({
                     voiceChannel: db.voiceChannel,
                     textChannel: db.textChannel,
@@ -84,7 +94,7 @@ export class persistentQueue extends Plugin {
                 if (db.trackRepeat) player.setTrackRepeat(true);
                 if (db.queueRepeat) player.setQueueRepeat(true);
                 player.play(TrackUtils.buildUnresolved(player.queue.current!, new User(client, db.current.requester)), { startTime: db.position ?? 0 });
-            }
+            })
         })
     }
     public delay(delayInms: number) {
