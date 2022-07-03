@@ -1,6 +1,9 @@
 {
   "name": "erela.js-persistent-queue",
   "version": "0.0.1",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "discord.js": "latest",
     "erela.js": "^2.3.3",

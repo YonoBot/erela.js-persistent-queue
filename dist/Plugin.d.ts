@@ -1,6 +1,6 @@
+import { Client } from "discord.js";
 import { Manager, Plugin } from "erela.js";
 import { PluginOptions } from "./typings";
-import { Client } from "discord.js";
 export declare class persistentQueue extends Plugin {
     private readonly options;
     private Db;
@@ -8,7 +8,7 @@ export declare class persistentQueue extends Plugin {
     private client;
     manager: Manager;
     constructor(client: Client, options: PluginOptions);
-    load(manager: Manager): void;
+    load(manager: Manager): Promise<void>;
     delay(delayInms: number): Promise<unknown>;
     connectDB(): Promise<void>;
 }
